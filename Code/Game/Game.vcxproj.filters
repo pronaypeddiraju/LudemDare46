@@ -22,9 +22,6 @@
     <ClCompile Include="WFC\WFC.cpp">
       <Filter>Gameplay</Filter>
     </ClCompile>
-    <ClCompile Include="WFC\WFCEntry.cpp">
-      <Filter>Gameplay</Filter>
-    </ClCompile>
     <ClCompile Include="WFC\WFCPropagator.cpp">
       <Filter>Gameplay</Filter>
     </ClCompile>
@@ -32,6 +29,9 @@
       <Filter>Gameplay</Filter>
     </ClCompile>
     <ClCompile Include="Map.cpp">
+      <Filter>Gameplay</Filter>
+    </ClCompile>
+    <ClCompile Include="Tile.cpp">
       <Filter>Gameplay</Filter>
     </ClCompile>
   </ItemGroup>
@@ -53,7 +53,6 @@
     <ClInclude Include="WFC\WFCArray3D.hpp" />
     <ClInclude Include="WFC\WFCColor.hpp" />
     <ClInclude Include="WFC\WFCDirection.hpp" />
-    <ClInclude Include="WFC\WFCEntry.hpp" />
     <ClInclude Include="WFC\WFCImage.hpp" />
     <ClInclude Include="WFC\WFCMarkovModel.hpp" />
     <ClInclude Include="WFC\WFCOverlappingModel.hpp" />
@@ -62,5 +61,6 @@
     <ClInclude Include="WFC\WFCTilingModel.hpp" />
     <ClInclude Include="WFC\WFCWave.hpp" />
     <ClInclude Include="Map.hpp" />
+    <ClInclude Include="Tile.hpp" />
   </ItemGroup>
 </Project>

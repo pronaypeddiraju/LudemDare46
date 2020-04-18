@@ -83,7 +83,7 @@ void App::StartUp()
 
 	g_ImGUI = new ImGUISystem(g_renderContext);
 
-	g_RNG = new RandomNumberGenerator((uint)GetCurrentTimeHPC());
+	g_RNG = new RandomNumberGenerator((uint)GetCurrentTimeSeconds());
 
 	m_game = new Game();
 	m_game->StartUp();
@@ -118,6 +118,8 @@ void App::ShutDown()
 	g_RNG = nullptr;
 
 	m_game->Shutdown();
+	delete m_game;
+	m_game = nullptr;
 
 	g_LogSystem->LogSystemShutDown();
 	delete g_LogSystem;
