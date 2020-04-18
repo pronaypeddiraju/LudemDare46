@@ -8,13 +8,31 @@
 			//False
 		//kernelSize
 			//NxN cuts in WFC to check kernels
+
+	//MapMaker
+		//type
+			//0 - BLOCKING
+			//1 - WALKABLE
+		//
 -->
 
 <Levels>
-	<LevelNode id="1">
-		<WFCGenerator type="1" name="Magic Office" kernelSize="3" periodic="True"/>
+	<LevelNode id="2">
+		<WFCGenerator type="1" name="Angular" N="3" periodic="True"/>
+		<MapMaker type="1" boundaryColor="0, 0, 0, 255" pathColor="255, 255, 255, 255"/> 
 	</LevelNode>
-	<LevelNode id = "2">
-		<WFCGenerator type="1" name="Chess" kernelSize="2" periodic="True"/>
+	<LevelNode id="1">
+		<WFCGenerator type="1" name="City" N="3" periodic="True" width="80" height="80"/>
+		<MapMaker type="1" boundaryColor="0, 0, 0, 255" pathColor="255, 255, 255, 255"/> 
+	</LevelNode>
+	<LevelNode id = "3">
+		<WFCGenerator type="1" name="Magic Office" kernelSize="3" periodic="True"/>
+		<MapMaker type="1" boundaryColor="255, 0, 114, 255" pathColor="66, 69, 80, 255"/> 
 	</LevelNode>
 </Levels>
+
+<!-- Color Guide
+
+Magic Office: boundaryColor="1.f, 0.f, 0.447058827f, 1.f" pathColor="0.258823544f, 0.270588249f,0.313725501f, 1.f" 
+
+-->

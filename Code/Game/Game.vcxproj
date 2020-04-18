@@ -196,8 +196,8 @@
   <ItemGroup>
     <ClCompile Include="App.cpp" />
     <ClCompile Include="Map.cpp" />
+    <ClCompile Include="Tile.cpp" />
     <ClCompile Include="WFC\WFC.cpp" />
-    <ClCompile Include="WFC\WFCEntry.cpp" />
     <ClCompile Include="WFC\WFCPropagator.cpp" />
     <ClCompile Include="WFC\WFCWave.cpp" />
     <ClCompile Include="Game.cpp" />
@@ -212,12 +212,12 @@
     <ClInclude Include="App.hpp" />
     <ClInclude Include="EngineBuildPreferences.hpp" />
     <ClInclude Include="Map.hpp" />
+    <ClInclude Include="Tile.hpp" />
     <ClInclude Include="WFC\WFC.hpp" />
     <ClInclude Include="WFC\WFCArray2D.hpp" />
     <ClInclude Include="WFC\WFCArray3D.hpp" />
     <ClInclude Include="WFC\WFCColor.hpp" />
     <ClInclude Include="WFC\WFCDirection.hpp" />
-    <ClInclude Include="WFC\WFCEntry.hpp" />
     <ClInclude Include="WFC\WFCImage.hpp" />
     <ClInclude Include="WFC\WFCMarkovModel.hpp" />
     <ClInclude Include="WFC\WFCOverlappingModel.hpp" />

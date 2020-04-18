@@ -11,6 +11,7 @@ struct MapInfo;
 struct Camera;
 class BitmapFont;
 class Shader;
+class Map;
 
 //------------------------------------------------------------------------------------------------------------------------------
 class Game
@@ -40,18 +41,43 @@ private:
 	void								SetupCameras();
 	void								LoadShaders();
 	void								ReadLevelsXML();
+
+	//Map Handling
+	void								MakeMap(int mapIndex);
+
+	//Performance Monitor
+	void								PerformFPSCachingAndCalculation(float deltaTime);
+
+	//Render Functions
+	void								RenderCurrentMap() const;
+	void								RenderDebugTileView() const;
+	void								RenderPerfInfo() const;
 private:
 	bool								m_isAlive = false;
 	float								m_windowAspect = 0.f;
 	uint								m_seed = 0;
 
 	Camera*								m_mainCamera = nullptr;
-	Rgba								g_clearScreenColor = Rgba(0.f, 0.f, 0.f, 1.f);
+	Rgba								m_clearScreenColor = Rgba(0.f, 0.f, 0.f, 1.f);
 
-	std::vector<MapInfo>				m_MapInfos;
+	std::vector<MapInfo>				m_mapInfos;
+	Map*								m_currentMap = nullptr;
+	TextureView*						m_currentMapTexture = nullptr;
+
+	//Performance Data
+	float								m_deltaTime = 0.f;
+	float								m_fpsCache[1000] = { 0.f };
+	float								m_fpsLastFrame = 0.f;
+	float								m_avgFPS = 0.f;
+	int									m_fpsCacheIndex = 0;
+	int									m_numConnectedPlayers = 0;
+	float								m_fpsLowest = 10.f;
+	float								m_fpsHighest = 0.f;
 
 public:
 	BitmapFont*							m_menuFont = nullptr;
-
 	Shader*								m_shader = nullptr;
+
+	int									m_mapIndex = 0;
+	int									m_numMaps = 0;
 };
