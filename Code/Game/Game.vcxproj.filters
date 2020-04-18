@@ -1,0 +1,66 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Framework">
+      <UniqueIdentifier>{ccfc04bb-a6af-469e-86d1-aecd281cf1f4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Gameplay">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Game.cpp">
+      <Filter>Gameplay</Filter>
+    </ClCompile>
+    <ClCompile Include="App.cpp">
+      <Filter>Framework</Filter>
+    </ClCompile>
+    <ClCompile Include="Main_Windows.cpp">
+      <Filter>Framework</Filter>
+    </ClCompile>
+    <ClCompile Include="WFC\WFC.cpp">
+      <Filter>Gameplay</Filter>
+    </ClCompile>
+    <ClCompile Include="WFC\WFCEntry.cpp">
+      <Filter>Gameplay</Filter>
+    </ClCompile>
+    <ClCompile Include="WFC\WFCPropagator.cpp">
+      <Filter>Gameplay</Filter>
+    </ClCompile>
+    <ClCompile Include="WFC\WFCWave.cpp">
+      <Filter>Gameplay</Filter>
+    </ClCompile>
+    <ClCompile Include="Map.cpp">
+      <Filter>Gameplay</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Game.hpp">
+      <Filter>Gameplay</Filter>
+    </ClInclude>
+    <ClInclude Include="App.hpp">
+      <Filter>Framework</Filter>
+    </ClInclude>
+    <ClInclude Include="GameCommon.hpp">
+      <Filter>Framework</Filter>
+    </ClInclude>
+    <ClInclude Include="EngineBuildPreferences.hpp">
+      <Filter>Gameplay</Filter>
+    </ClInclude>
+    <ClInclude Include="WFC\WFC.hpp" />
+    <ClInclude Include="WFC\WFCArray2D.hpp" />
+    <ClInclude Include="WFC\WFCArray3D.hpp" />
+    <ClInclude Include="WFC\WFCColor.hpp" />
+    <ClInclude Include="WFC\WFCDirection.hpp" />
+    <ClInclude Include="WFC\WFCEntry.hpp" />
+    <ClInclude Include="WFC\WFCImage.hpp" />
+    <ClInclude Include="WFC\WFCMarkovModel.hpp" />
+    <ClInclude Include="WFC\WFCOverlappingModel.hpp" />
+    <ClInclude Include="WFC\WFCPropagator.hpp" />
+    <ClInclude Include="WFC\WFCTile.hpp" />
+    <ClInclude Include="WFC\WFCTilingModel.hpp" />
+    <ClInclude Include="WFC\WFCWave.hpp" />
+    <ClInclude Include="Map.hpp" />
+  </ItemGroup>
+</Project>
