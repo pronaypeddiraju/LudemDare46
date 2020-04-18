@@ -1,0 +1,20 @@
+<!--
+	//WFCGenerator
+		//type:
+			//1 - OVERLAPPING
+			//2 - TILING
+		//Periodic
+			//True
+			//False
+		//kernelSize
+			//NxN cuts in WFC to check kernels
+-->
+
+<Levels>
+	<LevelNode id="1">
+		<WFCGenerator type="1" name="Magic Office" kernelSize="3" periodic="True"/>
+	</LevelNode>
+	<LevelNode id = "2">
+		<WFCGenerator type="1" name="Chess" kernelSize="2" periodic="True"/>
+	</LevelNode>
+</Levels>

@@ -1,0 +1,35 @@
+<set size="7">
+	<tiles>
+		<tile name="bridge" symmetry="I"/>
+		<tile name="ground" symmetry="X"/>
+		<tile name="river" symmetry="I"/>
+		<tile name="riverturn" symmetry="L"/>
+		<tile name="road" symmetry="I"/>
+		<tile name="roadturn" symmetry="L"/>
+		<tile name="t" symmetry="T"/>
+		<tile name="tower" symmetry="L"/>
+		<tile name="wall" symmetry="I"/>
+		<tile name="wallriver" symmetry="I"/>
+		<tile name="wallroad" symmetry="I"/>
+	</tiles>
+
+	<inputs>
+		<!-- 
+		-->
+		<input name="CastleMarkovSmall1" />
+		<input name="CastleMarkovSmall2" />
+		<input name="CastleMarkovSmall3" />
+		
+		<!--	
+		<input name="CastleMarkovMedium1" />
+		<input name="CastleMarkovMedium2" />
+		<input name="CastleMarkovMedium3" />
+		-->
+
+		<!--	
+		<input name="CastleMarkovLarge1" />
+		<input name="CastleMarkovLarge2" />
+		<input name="CastleMarkovLarge3" />
+		-->
+	</inputs>
+</set>
