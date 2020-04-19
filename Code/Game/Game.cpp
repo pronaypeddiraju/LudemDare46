@@ -10,9 +10,11 @@
 #include "Engine/Core/Image.hpp"
 #include "Engine/Renderer/TextureView.hpp"
 #include "Engine/Core/VertexUtils.hpp"
+#include "Engine/Math/MathUtils.hpp" 
 //Game Systems
 #include "Game/Game.hpp"
 #include "Game/Map.hpp"
+#include "Game/Player.hpp"
 #include "Game/GameCommon.hpp"
 
 //------------------------------------------------------------------------------------------------------------------------------
@@ -46,6 +48,9 @@ void Game::StartUp()
 	ReadLevelsXML();
 
 	MakeMap(m_mapIndex);
+
+	m_player = new Player(Vec2(1.5f, 1.5f), 0);
+	m_player->Startup();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------
@@ -88,7 +93,10 @@ void Game::Render() const
 	g_renderContext->ClearColorTargets(m_clearScreenColor);
 
 	RenderCurrentMap();
-	RenderDebugTileView();
+	//RenderDebugTileView();
+
+	RenderPlayer();
+	//RenderDebugPlayerView();
 
 	RenderPerfInfo();
 	g_renderContext->EndCamera();
@@ -104,6 +112,21 @@ void Game::PostRender()
 void Game::Update(float deltaTime)
 {
 	PerformFPSCachingAndCalculation(deltaTime);
+
+	m_player->Update(deltaTime);
+
+	//m_currentMap->Update(deltaTime);
+
+	UpdateCollisions(*m_currentMap);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------
+void Game::UpdateCollisions(const Map& map)
+{
+	if (m_player != nullptr)
+	{
+		PushEntityOutOfSolid(*m_player);
+	}
 }
 
 //------------------------------------------------------------------------------------------------------------------------------
@@ -203,6 +226,47 @@ void Game::MakeMap(int mapIndex)
 }
 
 //------------------------------------------------------------------------------------------------------------------------------
+void Game::PushEntityOutOfSolid(Entity& entity)
+{
+	IntVec2 entityCoordinates = entity.GetPosition();
+
+	//Check for North, South, East, West Tiles
+	PushEntityOutOfTileIfSolid(entity, entityCoordinates, IntVec2(0, 1));
+	PushEntityOutOfTileIfSolid(entity, entityCoordinates, IntVec2(0, -1));
+	PushEntityOutOfTileIfSolid(entity, entityCoordinates, IntVec2(1, 0));
+	PushEntityOutOfTileIfSolid(entity, entityCoordinates, IntVec2(-1, 0));
+
+	//Check NE,NW,SE,SW Tiles
+	PushEntityOutOfTileIfSolid(entity, entityCoordinates, IntVec2(1, 1));
+	PushEntityOutOfTileIfSolid(entity, entityCoordinates, IntVec2(1, -1));
+	PushEntityOutOfTileIfSolid(entity, entityCoordinates, IntVec2(-1, 1));
+	PushEntityOutOfTileIfSolid(entity, entityCoordinates, IntVec2(-1, -1));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------
+void Game::PushEntityOutOfTileIfSolid(Entity& entity, IntVec2 entityCoordinates, IntVec2 tileCoordinates)
+{
+	//First check if the tile is Solid
+	int xCoord = entityCoordinates.x + tileCoordinates.x;
+	int yCoord = entityCoordinates.y + tileCoordinates.y;
+
+	if (xCoord < 0 || yCoord < 0 || xCoord == m_currentMap->GetMapDimensions().x || yCoord == m_currentMap->GetMapDimensions().y)
+		return;
+
+	int tileIndex = m_currentMap->GetIndexFromCoordinates(xCoord, yCoord);
+
+	if (!m_currentMap->GetTileAtIndex(tileIndex).IsBlocking())
+	{
+		return;
+	}
+
+	//If we are here, the tile is blocking
+	Vec2 mins = Vec2(entityCoordinates + tileCoordinates);
+	AABB2 tileBounds = AABB2(mins, mins + Vec2::ONE);
+	PushDiscOutOfAABB2(entity.GetPositionEditable(), entity.GetPhysicsRadius(), tileBounds);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------
 void Game::PerformFPSCachingAndCalculation(float deltaTime)
 {
 	m_fpsCache[m_fpsCacheIndex] = m_fpsLastFrame = 1.f / deltaTime;
@@ -255,8 +319,28 @@ void Game::RenderCurrentMap() const
 	std::vector<Vertex_PCU> box_verts;
 	AddVertsForAABB2D(box_verts, imageBounds, Rgba::WHITE);
 	g_renderContext->DrawVertexArray(box_verts);
+}
 
-	RenderDebugTileView();
+//------------------------------------------------------------------------------------------------------------------------------
+void Game::RenderPlayer() const
+{
+	//We want to render the player as a 0.5 across and 0.75 tall rect
+	Vec2 playerPos = m_player->GetPosition();
+
+	float halfWidth = m_player->GetHalfWidth();
+	float heightUp = m_player->GetHeightUp();
+	float heightDown = m_player->GetHeightDown();
+
+	AABB2 imageBounds;
+	imageBounds.m_minBounds = Vec2(playerPos.x - halfWidth, playerPos.y - heightDown);
+	imageBounds.m_maxBounds = Vec2(playerPos.x + halfWidth, playerPos.y + heightUp);
+
+	g_renderContext->BindTextureViewWithSampler(0U, nullptr);
+	g_renderContext->BindShader(m_shader);
+
+	std::vector<Vertex_PCU> box_verts;
+	AddVertsForAABB2D(box_verts, imageBounds, Rgba::ORGANIC_BLUE);
+	g_renderContext->DrawVertexArray(box_verts);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------
@@ -266,9 +350,14 @@ void Game::RenderDebugTileView() const
 	std::vector<Vertex_PCU> box_verts;
 	AABB2 imageBounds;
 
+	g_renderContext->BindTextureViewWithSampler(0U, nullptr);
+	g_renderContext->BindShader(m_shader);
+
 	for (int tileIndex = 0; tileIndex < m_currentMap->GetTotalNumTiles(); tileIndex++)
 	{
 		Tile& tile = m_currentMap->GetTileAtIndex(tileIndex);
+		if(!tile.IsBlocking())
+			continue;
 
 		IntVec2 tilePos = tile.GetTileCoordinates();
 
@@ -276,13 +365,23 @@ void Game::RenderDebugTileView() const
 		imageBounds.m_minBounds.x += (float)startDimensions.x;
 		imageBounds.m_maxBounds = imageBounds.m_minBounds + Vec2::ONE;
 
-		g_renderContext->BindTextureViewWithSampler(0U, nullptr);
-		g_renderContext->BindShader(m_shader);
-
 		box_verts.clear();
 		AddVertsForAABB2D(box_verts, imageBounds, tile.GetTileColor());
 		g_renderContext->DrawVertexArray(box_verts);
 	}
+}
+
+//------------------------------------------------------------------------------------------------------------------------------
+void Game::RenderDebugPlayerView() const
+{
+	Vec2 playerPos = m_player->GetPosition();
+
+	g_renderContext->BindTextureViewWithSampler(0U, nullptr);
+	g_renderContext->BindShader(m_shader);
+
+	std::vector<Vertex_PCU> ringVerts;
+	AddVertsForRing2D(ringVerts, playerPos + Vec2((float)m_currentMap->GetMapDimensions().x, 0.f), m_player->GetPhysicsRadius(), 0.1f, Rgba::MAGENTA);
+	g_renderContext->DrawVertexArray(ringVerts);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------

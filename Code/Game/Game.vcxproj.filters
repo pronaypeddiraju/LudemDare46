@@ -34,6 +34,12 @@
     <ClCompile Include="Tile.cpp">
       <Filter>Gameplay</Filter>
     </ClCompile>
+    <ClCompile Include="Player.cpp">
+      <Filter>Gameplay</Filter>
+    </ClCompile>
+    <ClCompile Include="Entity.cpp">
+      <Filter>Gameplay</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Game.hpp">
@@ -62,5 +68,7 @@
     <ClInclude Include="WFC\WFCWave.hpp" />
     <ClInclude Include="Map.hpp" />
     <ClInclude Include="Tile.hpp" />
+    <ClInclude Include="Player.hpp" />
+    <ClInclude Include="Entity.hpp" />
   </ItemGroup>
 </Project>

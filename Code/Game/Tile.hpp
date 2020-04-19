@@ -15,7 +15,7 @@ enum eTileType
 
 class Tile
 {
-
+	friend class Game;
 public:
 	Tile();
 	~Tile();
@@ -23,6 +23,8 @@ public:
 
 	IntVec2					GetTileCoordinates();
 	int						GetTileIndex();
+
+	bool					IsBlocking();
 
 	void			  		SetTileType(eTileType tileType);
 	AABB2					GetTileDimensions() const;

@@ -1,8 +1,8 @@
 #pragma once
 #include "Engine/Commons/EngineCommon.hpp"
 
-constexpr float WORLD_WIDTH = 160.f;
-constexpr float WORLD_HEIGHT = 80.f;
+constexpr float WORLD_WIDTH = 16.f;
+constexpr float WORLD_HEIGHT = 8.f;
 constexpr float WORLD_CENTER_X = WORLD_WIDTH / 2.f;
 constexpr float WORLD_CENTER_Y = WORLD_HEIGHT / 2.f;
 

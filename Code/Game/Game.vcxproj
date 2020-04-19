@@ -195,7 +195,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="App.cpp" />
+    <ClCompile Include="Entity.cpp" />
     <ClCompile Include="Map.cpp" />
+    <ClCompile Include="Player.cpp" />
     <ClCompile Include="Tile.cpp" />
     <ClCompile Include="WFC\WFC.cpp" />
     <ClCompile Include="WFC\WFCPropagator.cpp" />
@@ -211,7 +213,9 @@
   <ItemGroup>
     <ClInclude Include="App.hpp" />
     <ClInclude Include="EngineBuildPreferences.hpp" />
+    <ClInclude Include="Entity.hpp" />
     <ClInclude Include="Map.hpp" />
+    <ClInclude Include="Player.hpp" />
     <ClInclude Include="Tile.hpp" />
     <ClInclude Include="WFC\WFC.hpp" />
     <ClInclude Include="WFC\WFCArray2D.hpp" />
