@@ -92,13 +92,24 @@ void Game::Render() const
 	g_renderContext->BeginCamera(*m_mainCamera);
 	g_renderContext->ClearColorTargets(m_clearScreenColor);
 
-	RenderCurrentMap();
-	//RenderDebugTileView();
+	if (!m_obtainedLifeSource)
+	{
+		RenderCurrentMap();
+		//RenderDebugTileView();
 
-	RenderPlayer();
-	//RenderDebugPlayerView();
+		RenderLifeSource();
 
-	RenderPerfInfo();
+		RenderPlayer();
+		//RenderDebugPlayerView();
+	}
+	else
+	{
+		//RenderMapLoadSequence();
+	}
+
+	RenderTimeRemaining();
+
+	//RenderPerfInfo();
 	g_renderContext->EndCamera();
 }
 
@@ -113,11 +124,17 @@ void Game::Update(float deltaTime)
 {
 	PerformFPSCachingAndCalculation(deltaTime);
 
-	m_player->Update(deltaTime);
-
-	//m_currentMap->Update(deltaTime);
-
-	UpdateCollisions(*m_currentMap);
+	bool playerAlive = m_currentMap->Update(deltaTime);
+	if (playerAlive)
+	{
+		m_player->Update(deltaTime);
+		UpdateCollisions(*m_currentMap);
+		UpdatePlayerCamera();
+	}
+	else
+	{
+		//Handle player death
+	}
 }
 
 //------------------------------------------------------------------------------------------------------------------------------
@@ -126,7 +143,55 @@ void Game::UpdateCollisions(const Map& map)
 	if (m_player != nullptr)
 	{
 		PushEntityOutOfSolid(*m_player);
+
+		bool result = HasObtainedLifeSource();
+		if (result && !m_obtainedLifeSource)
+		{
+			m_obtainedLifeSource = result;
+		}
 	}
+}
+
+//------------------------------------------------------------------------------------------------------------------------------
+bool Game::HasObtainedLifeSource()
+{
+	bool result = DoDiscsOverlap(m_player->GetPosition(), m_player->GetPhysicsRadius(), m_currentMap->GetLifeSource().GetPosition(), m_currentMap->GetLifeSource().GetPhysicsRadius());
+	return result;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------
+void Game::UpdatePlayerCamera()
+{
+	Vec2 playerPosition = m_player->GetPosition();
+
+	Vec2 bottomLeftPos = playerPosition + Vec2(-WORLD_CENTER_Y * CLIENT_ASPECT, -WORLD_CENTER_Y);
+	Vec2 topRightPos = playerPosition + Vec2(WORLD_CENTER_Y * CLIENT_ASPECT, WORLD_CENTER_Y);
+
+	//Bottom Left position of camera
+	Vec2 diffVector = Vec2(0.f, 0.f) - bottomLeftPos;
+
+	Vec2 bottomLeftCamPos;
+	bottomLeftCamPos.x = GetHigherValue(diffVector.x, 0.f);
+	bottomLeftCamPos.y = GetHigherValue(diffVector.y, 0.f);
+	diffVector = bottomLeftCamPos;
+
+	bottomLeftPos += diffVector;
+	topRightPos += diffVector;
+
+	//Top right position of camera
+	diffVector = Vec2(m_currentMap->GetMapDimensions()) - topRightPos;
+
+	Vec2 topRightCamPos;
+	topRightCamPos.x = GetLowerValue(diffVector.x, 0.f);
+	topRightCamPos.y = GetLowerValue(diffVector.y, 0.f);
+	diffVector = topRightCamPos;
+
+	bottomLeftPos += diffVector;
+	topRightPos += diffVector;
+
+	m_currentCamBounds = AABB2(bottomLeftPos, topRightPos);
+
+	m_mainCamera->SetOrthoView(bottomLeftPos, topRightPos);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------
@@ -202,6 +267,11 @@ void Game::ReadLevelsXML()
 		generatorNode = node->FirstChildElement("MapMaker");
 		info.m_pathColor = ParseXmlAttribute(*generatorNode, "pathColor", info.m_pathColor);
 		info.m_boundaryColor = ParseXmlAttribute(*generatorNode, "boundaryColor", info.m_boundaryColor);
+		info.m_portalColor = ParseXmlAttribute(*generatorNode, "portalColor", info.m_portalColor);
+
+		generatorNode = node->FirstChildElement("LifeSource");
+		info.m_lifeSourceColor = ParseXmlAttribute(*generatorNode, "lifeSourceColor", info.m_lifeSourceColor);
+		info.m_duration = ParseXmlAttribute(*generatorNode, "duration", info.m_duration);
 
 		m_mapInfos.push_back(info);
 
@@ -324,23 +394,20 @@ void Game::RenderCurrentMap() const
 //------------------------------------------------------------------------------------------------------------------------------
 void Game::RenderPlayer() const
 {
-	//We want to render the player as a 0.5 across and 0.75 tall rect
-	Vec2 playerPos = m_player->GetPosition();
-
-	float halfWidth = m_player->GetHalfWidth();
-	float heightUp = m_player->GetHeightUp();
-	float heightDown = m_player->GetHeightDown();
-
-	AABB2 imageBounds;
-	imageBounds.m_minBounds = Vec2(playerPos.x - halfWidth, playerPos.y - heightDown);
-	imageBounds.m_maxBounds = Vec2(playerPos.x + halfWidth, playerPos.y + heightUp);
-
 	g_renderContext->BindTextureViewWithSampler(0U, nullptr);
 	g_renderContext->BindShader(m_shader);
 
-	std::vector<Vertex_PCU> box_verts;
-	AddVertsForAABB2D(box_verts, imageBounds, Rgba::ORGANIC_BLUE);
-	g_renderContext->DrawVertexArray(box_verts);
+	m_player->Render();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------
+void Game::RenderLifeSource() const
+{
+	g_renderContext->BindTextureViewWithSampler(0U, nullptr);
+	g_renderContext->BindShader(m_shader);
+
+	LifeSource& lifeSource = m_currentMap->GetLifeSource();
+	lifeSource.Render();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------
@@ -391,7 +458,28 @@ void Game::RenderPerfInfo() const
 	g_renderContext->BindShader(m_shader);
 
 	std::vector<Vertex_PCU> textVerts;
-	m_menuFont->AddVertsForText2D(textVerts, Vec2(0, WORLD_HEIGHT - 0.5f), 0.5f, Stringf("Avg FPS: %.3f", m_avgFPS));
+	m_menuFont->AddVertsForText2D(textVerts, Vec2(m_currentCamBounds.m_maxBounds.x - 10.f, m_currentCamBounds.m_maxBounds.y - 0.5f), 0.5f, Stringf("Avg FPS: %.3f", m_avgFPS), Rgba::ORGANIC_YELLOW);
+
+	g_renderContext->DrawVertexArray(textVerts);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------
+void Game::RenderTimeRemaining() const
+{
+	g_renderContext->BindTextureViewWithSampler(0U, m_menuFont->GetTexture(), SAMPLE_MODE_POINT);
+
+	float elapsedTime = m_currentMap->GetElapsedTime();
+	float maxTime = m_currentMap->GetMapTime();
+
+	float remainingTime = maxTime - elapsedTime;
+
+	if (remainingTime < 0.f)
+	{
+		remainingTime = 0.f;
+	}
+
+	std::vector<Vertex_PCU> textVerts;
+	m_menuFont->AddVertsForText2D(textVerts, Vec2(m_currentCamBounds.m_minBounds.x, m_currentCamBounds.m_maxBounds.y - 0.5f), 0.5f, Stringf("Time Remaining: %.2f", remainingTime), Rgba::ORGANIC_YELLOW);
 
 	g_renderContext->DrawVertexArray(textVerts);
 }

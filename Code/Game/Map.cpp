@@ -2,6 +2,7 @@
 //Engine
 #include "Engine/Math/RandomNumberGenerator.hpp"
 #include "Engine/Core/Image.hpp"
+#include "Engine/Core/Time.hpp"
 //Game
 #include "Game/WFC/WFCOverlappingModel.hpp"
 #include "Game/WFC/WFCImage.hpp"
@@ -12,11 +13,11 @@ Map::Map(Game* game, MapInfo& info)
 	: m_game(game),
 	m_info(info)
 {
-	m_totalBlocks = info.m_mapDimensions.x * info.m_mapDimensions.y;
-	m_TOTAL_TILE_VERTS = m_totalBlocks * 6;
+	m_totalTiles = info.m_mapDimensions.x * info.m_mapDimensions.y;
+	m_TOTAL_TILE_VERTS = m_totalTiles * 6;
 
 	bool isWalkable = false;
-	for (int i = 0; i < m_totalBlocks; i++)
+	for (int i = 0; i < m_totalTiles; i++)
 	{
 		m_tiles.push_back(Tile(isWalkable, i, m_info.m_mapDimensions));
 	}
@@ -39,6 +40,9 @@ void Map::GenerateImage()
 void Map::InitializeMap()
 {
 	SetupTiles();
+
+	SpawnLifeSource();
+	SetMapDuration();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------
@@ -46,6 +50,8 @@ void Map::SetupTiles()
 {
 	SetupMapRim();
 	SetupStartArea();
+
+	SetPathableTiles();
 
 	//SpawnLifeSource();
 
@@ -143,7 +149,7 @@ int Map::GetIndexFromCoordinates(int x, int y)
 //------------------------------------------------------------------------------------------------------------------------------
 int Map::GetTotalNumTiles()
 {
-	return m_totalBlocks;
+	return m_totalTiles;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------
@@ -159,11 +165,37 @@ Tile& Map::GetTileAtIndex(int index)
 }
 
 //------------------------------------------------------------------------------------------------------------------------------
+Tile& Map::GetRandomTile()
+{
+	int randIndex = g_RNG->GetRandomIntInRange(0, m_totalTiles - 1);
+
+	return m_tiles[randIndex];
+}
+
+//------------------------------------------------------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------------------------------------------------------
 Image* Map::GetImage()
 {
 	return m_mapImage;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------
+bool Map::Update(float deltaTime)
+{
+	if (m_mapActive)
+	{
+		m_elapsedTime += deltaTime;
+	}
+
+	if (m_elapsedTime > m_mapEndTime)
+	{
+		return false;
+	}
+	else
+	{
+		return true;
+	}
 }
 
 //------------------------------------------------------------------------------------------------------------------------------
@@ -217,6 +249,12 @@ void Map::MakeMapImageFromColorArray(const Array2D<Color>& success)
 			//Image needs y reversed because Array2D stores Y top to bottom order
 			m_mapImage->SetTexelColor(IntVec2(xIndex, m_info.m_mapDimensions.y - 1 - yIndex), rbga);
 			m_tiles[GetIndexFromCoordinates(xIndex, yIndex)].SetTileColor(rbga);
+
+			if (rbga == m_info.m_pathColor)
+			{
+				m_tiles[GetIndexFromCoordinates(xIndex, yIndex)].SetTileType(TILE_TYPE_WALKABLE);
+			}
+
 		}
 	}
 }
@@ -229,4 +267,52 @@ Rgba Map::MakeRgbaFromColor(Color color)
 	return rgba;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------
+void Map::SetPathableTiles()
+{
+	for (int tileIndex = 0; tileIndex < m_totalTiles; tileIndex++)
+	{
+		Tile& tile = GetTileAtIndex(tileIndex);
+
+		if (tile.GetTileColor() != m_info.m_boundaryColor)
+		{
+			tile.SetTileType(TILE_TYPE_WALKABLE);
+		}
+	}
+}
+
+//------------------------------------------------------------------------------------------------------------------------------
+void Map::SetMapDuration()
+{
+	m_mapActive = true;
+	m_mapEndTime = m_info.m_duration;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------
+void Map::SpawnLifeSource()
+{
+	//Spawn a life source item at a random pathable tile
+	bool hasSpawned = false;
+
+	while (!hasSpawned)
+	{
+		Tile& tile = GetRandomTile();
+
+		//Check if tile is in required region
+		IntVec2 tileCoords = tile.GetTileCoordinates();
+		if (tileCoords.x > 5 && tileCoords.x < m_info.m_mapDimensions.x - 5 &&
+			tileCoords.y > 5 && tileCoords.y < m_info.m_mapDimensions.y - 5)
+		{
+			//Check if tile is pathable
+			if (!tile.IsBlocking())
+			{
+				//Make life source at this tile
+				m_lifeSource.SetPosition(Vec2(tileCoords) + Vec2(0.5f, 0.5f));
+				m_lifeSource.SetLifeSourceColor(m_info.m_lifeSourceColor);
+				hasSpawned = true;
+			}
+		}
+	}
+
+}
 
