@@ -17,17 +17,30 @@
 -->
 
 <Levels>
+	<LevelNode id = "3">
+		<WFCGenerator type="1" name="Magic Office" kernelSize="3" periodic="True"/>
+		<MapMaker type="1" boundaryColor="255, 0, 114, 255" pathColor="66, 69, 80, 255" portalColor = "89, 112, 195, 255"/> 
+		<LifeSource duration="20.f" lifeSourceColor="34, 177, 76, 255" /> 
+	</LevelNode>
+	<LevelNode id="1">
+		<WFCGenerator type="1" name="KnotWithPaths" N="3" periodic="True"/>
+		<MapMaker type="1" boundaryColor="0, 0, 0, 255" pathColor="255, 255, 255, 255" portalColor = "89, 112, 195, 255"/> 
+		<LifeSource duration="20.f" lifeSourceColor="34, 177, 76, 255" /> 
+	</LevelNode>
+	<LevelNode id="1">
+		<WFCGenerator type="1" name="CheekLessCat" N="3" symmetry="2" periodic="True" width="80" height="80"/>
+		<MapMaker type="1" boundaryColor="0, 0, 0, 255" pathColor="255, 255, 255, 255" portalColor = "89, 112, 195, 255"/> 
+		<LifeSource duration="40.f" lifeSourceColor="34, 177, 76, 255" /> 
+	</LevelNode>
 	<LevelNode id="2">
 		<WFCGenerator type="1" name="Angular" N="3" periodic="True"/>
-		<MapMaker type="1" boundaryColor="0, 0, 0, 255" pathColor="255, 255, 255, 255"/> 
+		<MapMaker type="1" boundaryColor="0, 0, 0, 255" pathColor="255, 255, 255, 255" portalColor = "89, 112, 195, 255"/> 
+		<LifeSource duration="20.f" lifeSourceColor="34, 177, 76, 255" /> 
 	</LevelNode>
 	<LevelNode id="1">
 		<WFCGenerator type="1" name="City" N="3" periodic="True" width="80" height="80"/>
-		<MapMaker type="1" boundaryColor="0, 0, 0, 255" pathColor="255, 255, 255, 255"/> 
-	</LevelNode>
-	<LevelNode id = "3">
-		<WFCGenerator type="1" name="Magic Office" kernelSize="3" periodic="True"/>
-		<MapMaker type="1" boundaryColor="255, 0, 114, 255" pathColor="66, 69, 80, 255"/> 
+		<MapMaker type="1" boundaryColor="0, 0, 0, 255" pathColor="255, 255, 255, 255" portalColor = "89, 112, 195, 255"/> 
+		<LifeSource duration="40.f" lifeSourceColor="34, 177, 76, 255" /> 
 	</LevelNode>
 </Levels>
 

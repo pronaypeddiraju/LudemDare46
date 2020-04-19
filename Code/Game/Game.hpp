@@ -7,6 +7,7 @@
 //Third Party
 
 //------------------------------------------------------------------------------------------------------------------------------
+struct AABB2;
 struct MapInfo;
 struct Camera;
 class BitmapFont;
@@ -26,8 +27,6 @@ public:
 	void								Shutdown();
 
 	void								Update(float deltaTime);
-
-	void								UpdateCollisions(const Map& map);
 
 	void								HandleKeyPressed(unsigned char keyCode);
 	void								HandleKeyReleased( unsigned char keyCode );
@@ -51,12 +50,19 @@ private:
 	void								PushEntityOutOfSolid(Entity& entity);
 	void								PushEntityOutOfTileIfSolid(Entity& entity, IntVec2 entityCoordinates, IntVec2 tileCoordinates);
 
+	//Update Functions
+	void								UpdateCollisions(const Map& map);
+	bool								HasObtainedLifeSource();
+	void								UpdatePlayerCamera();
+
 	//Performance Monitor
 	void								PerformFPSCachingAndCalculation(float deltaTime);
 
 	//Render Functions
 	void								RenderCurrentMap() const;
 	void								RenderPlayer() const;
+	void								RenderLifeSource() const;
+	void								RenderTimeRemaining() const;
 	void								RenderDebugTileView() const;
 	void								RenderDebugPlayerView() const;
 	void								RenderPerfInfo() const;
@@ -64,6 +70,7 @@ private:
 	bool								m_isAlive = false;
 	float								m_windowAspect = 0.f;
 	uint								m_seed = 0;
+	bool								m_obtainedLifeSource = false;
 
 	Camera*								m_mainCamera = nullptr;
 	Rgba								m_clearScreenColor = Rgba(0.f, 0.f, 0.f, 1.f);
@@ -83,6 +90,8 @@ private:
 	int									m_numConnectedPlayers = 0;
 	float								m_fpsLowest = 10.f;
 	float								m_fpsHighest = 0.f;
+
+	AABB2								m_currentCamBounds;
 
 public:
 	BitmapFont*							m_menuFont = nullptr;

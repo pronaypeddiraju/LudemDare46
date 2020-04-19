@@ -8,6 +8,7 @@ enum eEntityType
 
 	ENTITY_PLAYER,
 	ENTITY_ENEMY,
+	ENTITY_LIFESOURCE,
 	
 	NUM_ENTITY_TYPES
 };
@@ -23,6 +24,8 @@ public:
 	inline Vec2&			GetPositionEditable() { return m_position; }
 	inline float			GetPhysicsRadius() { return m_physicsRadius; }
 
+	void					SetPosition(const Vec2& position) { m_position = position; }
+
 private:
 
 public:
@@ -35,5 +38,5 @@ public:
 
 	eEntityType		m_entityType = ENTITY_UNDEFINED;
 
-	float	m_physicsRadius = 0.25f;
+	float	m_physicsRadius = 0.45f;
 };

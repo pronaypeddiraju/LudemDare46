@@ -40,6 +40,9 @@
     <ClCompile Include="Entity.cpp">
       <Filter>Gameplay</Filter>
     </ClCompile>
+    <ClCompile Include="LifeSource.cpp">
+      <Filter>Gameplay</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Game.hpp">
@@ -70,5 +73,6 @@
     <ClInclude Include="Tile.hpp" />
     <ClInclude Include="Player.hpp" />
     <ClInclude Include="Entity.hpp" />
+    <ClInclude Include="LifeSource.hpp" />
   </ItemGroup>
 </Project>

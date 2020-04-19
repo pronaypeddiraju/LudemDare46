@@ -1,9 +1,12 @@
 #pragma once
+//Engine System
 #include "Engine/Math/IntVec2.hpp"
+//Game Systems
 #include "Game/Game.hpp"
 #include "Game/WFC/WFCArray2D.hpp"
 #include "Game/WFC/WFCColor.hpp"
 #include "Game/Tile.hpp"
+#include "Game/LifeSource.hpp"
 
 //------------------------------------------------------------------------------------------------------------------------------
 class Game;
@@ -33,6 +36,11 @@ struct MapInfo
 	eTileType				m_defaultTileType = TILE_TYPE_BLOCKING;
 	Rgba					m_pathColor = Rgba::CLEAR;
 	Rgba					m_boundaryColor = Rgba::BLACK;
+	Rgba					m_portalColor = Rgba::WHITE;
+	Rgba					m_lifeSourceColor = Rgba::GREEN;
+
+	//How long is this map to last?
+	float					m_duration = 10.f;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------
@@ -47,11 +55,18 @@ public:
 
 	Image*					GetImage();	//I want the pointer so I can edit it from Game if I want to
 
+	bool					Update(float deltaTime);
+
 	//Helpers
 	int						GetIndexFromCoordinates(int x, int y);
 	int						GetTotalNumTiles();
 	const IntVec2&			GetMapDimensions() const;
 	Tile&					GetTileAtIndex(int index);
+
+	float					GetMapTime() const { return m_mapEndTime; }
+	float					GetElapsedTime() const { return m_elapsedTime; }
+
+	LifeSource&				GetLifeSource() { return m_lifeSource; }
 
 private:
 	//Internal Image generation methods
@@ -61,6 +76,12 @@ private:
 
 	void					SetupMapRim();
 	void					SetupStartArea();
+	void					SetPathableTiles();
+
+	void					SetMapDuration();
+	void					SpawnLifeSource();
+
+	Tile&					GetRandomTile();
 
 	void					MakeMapImageFromColorArray(const Array2D<Color>& success);
 	Rgba					MakeRgbaFromColor(Color color);
@@ -68,15 +89,21 @@ private:
 	Game*					m_game = nullptr;
 	MapInfo					m_info;
 
+	bool					m_mapActive = false;
 
 	std::vector<Tile>		m_tiles;
 	Image*					m_mapImage = nullptr;
 
-	int						m_totalBlocks = 0;
+	int						m_totalTiles = 0;
 	int						m_numMaxTest = 10;
 
 	int						m_TOTAL_TILE_VERTS = 0;
 	int						m_defaultNumOutputImages = 2;
 	const std::string		m_WFC_START_PATH = "Data/Images/WFCInputSamples/";	
 
+	float					m_mapEndTime = 0.f;
+
+	LifeSource				m_lifeSource;
+
+	float					m_elapsedTime = 0.f;
 };
