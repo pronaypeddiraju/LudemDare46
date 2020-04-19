@@ -12,6 +12,8 @@ struct Camera;
 class BitmapFont;
 class Shader;
 class Map;
+class Player;
+class Entity;
 
 //------------------------------------------------------------------------------------------------------------------------------
 class Game
@@ -25,7 +27,9 @@ public:
 
 	void								Update(float deltaTime);
 
-	void								HandleKeyPressed( unsigned char keyCode );
+	void								UpdateCollisions(const Map& map);
+
+	void								HandleKeyPressed(unsigned char keyCode);
 	void								HandleKeyReleased( unsigned char keyCode );
 	void								HandleCharacter( unsigned char charCode );
 
@@ -44,13 +48,17 @@ private:
 
 	//Map Handling
 	void								MakeMap(int mapIndex);
+	void								PushEntityOutOfSolid(Entity& entity);
+	void								PushEntityOutOfTileIfSolid(Entity& entity, IntVec2 entityCoordinates, IntVec2 tileCoordinates);
 
 	//Performance Monitor
 	void								PerformFPSCachingAndCalculation(float deltaTime);
 
 	//Render Functions
 	void								RenderCurrentMap() const;
+	void								RenderPlayer() const;
 	void								RenderDebugTileView() const;
+	void								RenderDebugPlayerView() const;
 	void								RenderPerfInfo() const;
 private:
 	bool								m_isAlive = false;
@@ -63,6 +71,8 @@ private:
 	std::vector<MapInfo>				m_mapInfos;
 	Map*								m_currentMap = nullptr;
 	TextureView*						m_currentMapTexture = nullptr;
+
+	Player*								m_player = nullptr;
 
 	//Performance Data
 	float								m_deltaTime = 0.f;

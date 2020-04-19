@@ -29,6 +29,19 @@ int Tile::GetTileIndex()
 }
 
 //------------------------------------------------------------------------------------------------------------------------------
+bool Tile::IsBlocking()
+{
+	if (m_tileType == TILE_TYPE_BLOCKING)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+//------------------------------------------------------------------------------------------------------------------------------
 void Tile::SetTileType(eTileType tileType)
 {
 	m_tileType = tileType;
