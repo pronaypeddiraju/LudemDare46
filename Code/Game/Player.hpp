@@ -17,9 +17,15 @@ public:
 	void					Render() const;
 	void					Shutdown();
 
+	inline void				SetLife(float life) { m_life = life; }
+	inline float			GetInitLife() {return m_initLife;}
+
 	float					GetHalfWidth() const { return m_halfWidth; };
 	float					GetHeightUp() const { return m_heightUp; }
 	float					GetHeightDown() const { return m_heightDown; }
+
+	void					SetActive(bool setValue) { m_isActive = setValue; }
+	bool					IsActive() { return m_isActive; }
 
 private:
 
@@ -29,7 +35,7 @@ public:
 
 private:
 	float					m_acceleration = 50.f;
-	float					m_life = 100.f;
+	float					m_life = 1.f;
 	float					m_initLife = 100.f;
 
 	int						m_playerID = 0;
@@ -37,4 +43,6 @@ private:
 	float					m_halfWidth = 0.25f;
 	float					m_heightUp = 0.45f;
 	float					m_heightDown = 0.45f;
+
+	bool					m_isActive = false;
 };

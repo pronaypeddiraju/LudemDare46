@@ -52,10 +52,8 @@ void Map::SetupTiles()
 	SetupStartArea();
 
 	SetPathableTiles();
-
-	//SpawnLifeSource();
-
-	//SetupEndArea();
+	
+	PerformMapSteps();
 	//Teleport to recieve a new life
 	//SetupRandomTeleports();
 }
@@ -183,6 +181,9 @@ Image* Map::GetImage()
 //------------------------------------------------------------------------------------------------------------------------------
 bool Map::Update(float deltaTime)
 {
+	if (m_lifeSource.IsAttained())
+		m_mapActive = false;
+
 	if (m_mapActive)
 	{
 		m_elapsedTime += deltaTime;
@@ -265,6 +266,54 @@ Rgba Map::MakeRgbaFromColor(Color color)
 	Rgba rgba;
 	rgba.SetFromBytes(color.r, color.g, color.b, 255);	
 	return rgba;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------
+void Map::PerformMapSteps()
+{
+	std::vector<MapStep>::iterator itr;
+	itr = m_info.m_mapStep.begin();
+
+	while (itr != m_info.m_mapStep.end())
+	{
+		//perform map step
+		RunStepForType(*itr);
+		itr++;
+	}
+}
+
+//------------------------------------------------------------------------------------------------------------------------------
+void Map::RunStepForType(const MapStep& step)
+{
+	if (step.m_type == ELIMINATE)
+	{
+		int numReplaced = 0;
+		int numToReplace = step.m_num;
+
+		while (numReplaced < numToReplace)
+		{
+			bool isRequiredTile = false;
+			while (!isRequiredTile)
+			{
+				Tile& tile = GetRandomTile();
+
+				if (tile.GetTileColor() == step.m_startColor)
+				{
+					//we got our tile
+					tile.SetTileColor(step.m_destColor);
+					tile.SetTileType(TILE_TYPE_WALKABLE);
+
+					//Replace color in the image too
+ 					IntVec2 tileCoords = tile.GetTileCoordinates();
+					m_mapImage->SetTexelColor(IntVec2(tileCoords.x, m_mapImage->GetImageDimensions().y - 1 - tileCoords.y), step.m_destColor);
+
+					numReplaced++;
+
+					isRequiredTile = true;
+				}
+			}
+		}
+	}
 }
 
 //------------------------------------------------------------------------------------------------------------------------------

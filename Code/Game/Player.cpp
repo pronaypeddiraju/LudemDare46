@@ -30,8 +30,15 @@ void Player::Startup()
 //------------------------------------------------------------------------------------------------------------------------------
 void Player::Update(float deltaTime)
 {
+	if (!m_isActive)
+		return;
+
 	//Get Xbox controller data
 	XboxController playerController = g_inputSystem->GetXboxController(m_playerID);
+
+	if (!playerController.IsConnected())
+		return;
+
 	AnalogJoyStick leftStick = playerController.GetLeftJoystick();
 	//AnalogJoyStick rightStick = playerController.GetRightJoystick();
 
@@ -47,8 +54,8 @@ void Player::Render() const
 {
 	//We want to render the player as a 0.5 across and 0.75 tall rect
 	AABB2 imageBounds;
-	imageBounds.m_minBounds = Vec2(m_position.x - m_halfWidth, m_position.y - m_heightDown);
-	imageBounds.m_maxBounds = Vec2(m_position.x + m_halfWidth, m_position.y + m_heightUp);
+	imageBounds.m_minBounds = Vec2(m_position.x - m_halfWidth, m_position.y - m_heightDown * m_life);
+	imageBounds.m_maxBounds = Vec2(m_position.x + m_halfWidth, m_position.y + m_heightUp * m_life);
 
 	std::vector<Vertex_PCU> box_verts;
 	AddVertsForAABB2D(box_verts, imageBounds, Rgba::ORGANIC_BLUE);
