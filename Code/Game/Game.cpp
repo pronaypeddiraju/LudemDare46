@@ -51,12 +51,24 @@ void Game::StartUp()
 
 	m_player = new Player(Vec2(1.5f, 1.5f), 0);
 	m_player->Startup();
+
+	m_gameInit = false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------
 void Game::HandleKeyPressed(unsigned char keyCode)
 {
 	UNUSED(keyCode);
+	switch (keyCode)
+	{
+	break;
+	case ENTER_KEY:
+	{
+		m_gameInit = true;
+	}
+	default:
+		break;
+	}
 }
 
 //------------------------------------------------------------------------------------------------------------------------------
@@ -92,23 +104,24 @@ void Game::Render() const
 	g_renderContext->BeginCamera(*m_mainCamera);
 	g_renderContext->ClearColorTargets(m_clearScreenColor);
 
-	if (!m_obtainedLifeSource)
+	if (!m_gameInit)
 	{
-		RenderCurrentMap();
-		//RenderDebugTileView();
-
-		RenderLifeSource();
-
-		RenderPlayer();
-		//RenderDebugPlayerView();
+		RenderGameInitScreen();
 	}
 	else
 	{
-		//RenderMapLoadSequence();
+		if (!m_obtainedLifeSource && !m_loadInitiated && !m_gameLost)
+		{
+			RenderGamePlay();
+		}
+		else
+		{
+			RenderGameState();
+		}
 	}
 
-	RenderTimeRemaining();
-
+	//RenderDebugPlayerView();
+	//RenderMapLoadSequence();
 	//RenderPerfInfo();
 	g_renderContext->EndCamera();
 }
@@ -122,19 +135,49 @@ void Game::PostRender()
 //------------------------------------------------------------------------------------------------------------------------------
 void Game::Update(float deltaTime)
 {
+	if (!m_gameInit)
+		return;
+
 	PerformFPSCachingAndCalculation(deltaTime);
 
-	bool playerAlive = m_currentMap->Update(deltaTime);
-	if (playerAlive)
+	if (m_loadInitiated)
 	{
-		m_player->Update(deltaTime);
-		UpdateCollisions(*m_currentMap);
-		UpdatePlayerCamera();
+		HandleLoadCase(deltaTime);
 	}
 	else
 	{
-		//Handle player death
+		HandleGameLogic(deltaTime);
 	}
+}
+
+//------------------------------------------------------------------------------------------------------------------------------
+void Game::SetPlayerLife()
+{
+	float initHealth = m_player->GetInitLife();
+	float elapsedTime = m_currentMap->GetElapsedTime();
+	float maxTime = m_currentMap->GetMapTime();
+
+	float rangeFloat = RangeMapFloat(elapsedTime, 0, maxTime, 0, 1);
+
+	m_player->SetLife( 1.f - rangeFloat);	//The reverse of how much time has elapsed is the life of the player
+}
+
+//------------------------------------------------------------------------------------------------------------------------------
+void Game::LoadNextMap()
+{
+	//reset information on game
+	delete m_currentMap;
+	m_currentMap = nullptr;
+
+	delete m_currentMapTexture;
+	m_currentMapTexture = nullptr;
+
+	MakeMap(m_mapIndex);
+
+	m_player->SetPosition(Vec2(1.5f, 1.5f));
+	m_player->SetActive(false);
+
+	m_obtainedLifeSource = false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------
@@ -148,6 +191,8 @@ void Game::UpdateCollisions(const Map& map)
 		if (result && !m_obtainedLifeSource)
 		{
 			m_obtainedLifeSource = result;
+			m_collectedFragements++;
+			m_currentMap->GetLifeSource().SetAttained(true);
 		}
 	}
 }
@@ -244,7 +289,7 @@ void Game::ReadLevelsXML()
 	XMLElement* root = levelDoc.RootElement();
 	XMLElement* node = root->FirstChildElement("LevelNode");
 
-	int problemIndex = 1;
+	int problemIndex = 0;
 
 	while (node != nullptr)
 	{
@@ -273,6 +318,19 @@ void Game::ReadLevelsXML()
 		info.m_lifeSourceColor = ParseXmlAttribute(*generatorNode, "lifeSourceColor", info.m_lifeSourceColor);
 		info.m_duration = ParseXmlAttribute(*generatorNode, "duration", info.m_duration);
 
+		generatorNode = node->FirstChildElement("MapStep");
+		if (generatorNode != nullptr)
+		{
+			//We have a map step to perform
+			MapStep mapStep;
+			int type = ParseXmlAttribute(*generatorNode, "type", 0);
+			mapStep.m_type = (eMapStepType)type;
+			mapStep.m_num = ParseXmlAttribute(*generatorNode, "num", 0);
+			mapStep.m_startColor = ParseXmlAttribute(*generatorNode, "colorToElim", mapStep.m_startColor);
+			mapStep.m_destColor = ParseXmlAttribute(*generatorNode, "replaceColor", mapStep.m_destColor);
+			info.m_mapStep.push_back(mapStep);
+		}
+
 		m_mapInfos.push_back(info);
 
 		node = node->NextSiblingElement("LevelNode");
@@ -280,6 +338,7 @@ void Game::ReadLevelsXML()
 	}
 
 	m_numMaps = problemIndex;
+	m_maxFragments = m_numMaps;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------
@@ -334,6 +393,54 @@ void Game::PushEntityOutOfTileIfSolid(Entity& entity, IntVec2 entityCoordinates,
 	Vec2 mins = Vec2(entityCoordinates + tileCoordinates);
 	AABB2 tileBounds = AABB2(mins, mins + Vec2::ONE);
 	PushDiscOutOfAABB2(entity.GetPositionEditable(), entity.GetPhysicsRadius(), tileBounds);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------
+void Game::HandleLoadCase(float deltaTime)
+{
+	m_elapsedLoadTime += deltaTime;
+
+	if (m_elapsedLoadTime > m_maxLoadTime)
+	{
+		m_loadInitiated = false;
+		m_elapsedLoadTime = 0.f;
+	}
+}
+
+//------------------------------------------------------------------------------------------------------------------------------
+void Game::HandleGameLogic(float deltaTime)
+{
+	bool playerAlive = m_currentMap->Update(deltaTime);
+	if (playerAlive)
+	{
+		SetPlayerLife();
+
+		m_player->Update(deltaTime);
+		UpdateCollisions(*m_currentMap);
+		ResetPlayerIfInactive();
+		UpdatePlayerCamera();
+	}
+	else
+	{
+		//Handle player death
+		m_gameComplete = true;
+		m_gameLost = true;
+	}
+
+	if (!m_currentMap->IsActive())
+	{
+		m_mapIndex++;
+		if (m_mapIndex < m_numMaps)
+		{
+			m_loadInitiated = true;
+			m_elapsedLoadTime = 0.f;
+			LoadNextMap();
+		}
+		else
+		{
+			m_gameComplete = true;
+		}
+	}
 }
 
 //------------------------------------------------------------------------------------------------------------------------------
@@ -463,6 +570,110 @@ void Game::RenderPerfInfo() const
 	g_renderContext->DrawVertexArray(textVerts);
 }
 
+void Game::RenderLoadScreen() const
+{
+	//Render the load screen where we are going to start loading the next map
+	g_renderContext->BindTextureViewWithSampler(0U, m_menuFont->GetTexture(), SAMPLE_MODE_POINT);
+	g_renderContext->BindShader(m_shader);
+
+	std::vector<Vertex_PCU> textVerts;
+	Vec2 renderPosition = m_currentCamBounds.m_minBounds + Vec2(1.f, WORLD_CENTER_Y + 1.f);
+	m_menuFont->AddVertsForText2D(textVerts, renderPosition, 0.25f, "Searching for some damn food...", Rgba::ORGANIC_YELLOW);
+
+	g_renderContext->DrawVertexArray(textVerts);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------
+void Game::RenderGameEndScreen() const
+{
+	//Render the load screen where we are going to start loading the next map
+	g_renderContext->BindTextureViewWithSampler(0U, m_menuFont->GetTexture(), SAMPLE_MODE_POINT);
+	g_renderContext->BindShader(m_shader);
+
+	std::vector<Vertex_PCU> textVerts;
+	Vec2 renderPosition = m_currentCamBounds.m_minBounds + Vec2(1.f, WORLD_CENTER_Y + 1.f);
+	
+	if (!m_gameLost)
+	{
+		m_menuFont->AddVertsForText2D(textVerts, renderPosition, m_HUDFontHeight, "You saved the tiger from Carole Baskin", Rgba::ORGANIC_GREEN);
+		renderPosition.y -= 1.f;
+		m_menuFont->AddVertsForText2D(textVerts, renderPosition, m_HUDFontHeight, "Your tiger can now eat for a week", Rgba::ORGANIC_YELLOW);
+		renderPosition.y -= m_HUDFontHeight;
+		m_menuFont->AddVertsForText2D(textVerts, renderPosition, m_HUDFontHeight, "You can always financially recover from this", Rgba::ORGANIC_YELLOW);
+	}
+	else
+	{
+		m_menuFont->AddVertsForText2D(textVerts, renderPosition, m_HUDFontHeight, "You couldn't feed your tiger", Rgba::ORGANIC_RED);
+		renderPosition.y -= 1.f;
+		m_menuFont->AddVertsForText2D(textVerts, renderPosition, m_HUDFontHeight, "Carole Baskin has your tiger, you now have a law suit", Rgba::ORGANIC_YELLOW);
+		renderPosition.y -= m_HUDFontHeight;
+		m_menuFont->AddVertsForText2D(textVerts, renderPosition, m_HUDFontHeight, "You will never financially recover from this", Rgba::ORGANIC_YELLOW);
+	}
+
+	g_renderContext->DrawVertexArray(textVerts);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------
+void Game::RenderGameInitScreen() const
+{
+	//Render the load screen where we are going to start loading the next map
+	g_renderContext->BindTextureViewWithSampler(0U, m_menuFont->GetTexture(), SAMPLE_MODE_POINT);
+	g_renderContext->BindShader(m_shader);
+
+	std::vector<Vertex_PCU> textVerts;
+	Vec2 renderPosition = m_currentCamBounds.m_minBounds + Vec2(1.f, WORLD_CENTER_Y + 1.f);
+	m_menuFont->AddVertsForText2D(textVerts, renderPosition, m_HUDFontHeight, "Carole Baskin is out to destroy you!", Rgba::ORGANIC_YELLOW);
+	renderPosition.y -= 1.f;
+	m_menuFont->AddVertsForText2D(textVerts, renderPosition, m_HUDFontHeight, "Find food so you can feed your tiger", Rgba::ORGANIC_GREEN);
+	renderPosition.y -= m_HUDFontHeight;
+	m_menuFont->AddVertsForText2D(textVerts, renderPosition, m_HUDFontHeight, "Collect green diamonds on the map", Rgba::ORGANIC_GREEN);
+
+	renderPosition.y -= 1.f;
+	m_menuFont->AddVertsForText2D(textVerts, renderPosition, m_HUDFontHeight, "You need an xBox controller to source your food", Rgba::WHITE);
+	renderPosition.y -= m_HUDFontHeight;
+	m_menuFont->AddVertsForText2D(textVerts, renderPosition, m_HUDFontHeight, "Press ENTER to continue", Rgba::WHITE);
+
+	g_renderContext->DrawVertexArray(textVerts);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------
+void Game::RenderGamePlay() const
+{
+	RenderCurrentMap();
+	//RenderDebugTileView();
+
+	RenderLifeSource();
+
+	RenderPlayer();
+	RenderTimeRemaining();
+	RenderFragmentsCollected();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------
+void Game::RenderGameState() const
+{
+	if (!m_gameComplete)
+	{
+		RenderLoadScreen();
+	}
+	else
+	{
+		//The game is completed
+		RenderGameEndScreen();
+	}
+}
+
+//------------------------------------------------------------------------------------------------------------------------------
+void Game::ResetPlayerIfInactive()
+{
+	if (!m_player->IsActive())
+	{
+		m_player->SetActive(true);
+		m_player->SetPosition(Vec2(1.5f, 1.5f));
+		m_player->SetLife(1.f);
+	}
+}
+
 //------------------------------------------------------------------------------------------------------------------------------
 void Game::RenderTimeRemaining() const
 {
@@ -479,7 +690,21 @@ void Game::RenderTimeRemaining() const
 	}
 
 	std::vector<Vertex_PCU> textVerts;
-	m_menuFont->AddVertsForText2D(textVerts, Vec2(m_currentCamBounds.m_minBounds.x, m_currentCamBounds.m_maxBounds.y - 0.5f), 0.5f, Stringf("Time Remaining: %.2f", remainingTime), Rgba::ORGANIC_YELLOW);
+	m_menuFont->AddVertsForText2D(textVerts, Vec2(m_currentCamBounds.m_minBounds.x, m_currentCamBounds.m_maxBounds.y - m_HUDFontHeight), m_HUDFontHeight, Stringf("Time Remaining: %.2f", remainingTime), Rgba::ORGANIC_YELLOW);
+
+	g_renderContext->DrawVertexArray(textVerts);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------
+void Game::RenderFragmentsCollected() const
+{
+	g_renderContext->BindTextureViewWithSampler(0U, m_menuFont->GetTexture(), SAMPLE_MODE_POINT);
+	g_renderContext->BindShader(m_shader);
+
+	std::vector<Vertex_PCU> textVerts;
+	std::string printString = Stringf("Damn Food: %d/%d", m_collectedFragements, m_maxFragments);
+	m_menuFont->AddVertsForText2D(textVerts, Vec2(m_currentCamBounds.m_minBounds.x, m_currentCamBounds.m_maxBounds.y - m_HUDFontHeight * 2.f), m_HUDFontHeight, printString, Rgba::ORGANIC_GREEN);
+
 
 	g_renderContext->DrawVertexArray(textVerts);
 }

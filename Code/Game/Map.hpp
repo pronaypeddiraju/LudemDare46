@@ -17,6 +17,23 @@ enum eGeneratorType
 	TILING
 };
 
+enum eMapStepType
+{
+	ELIMINATE,
+};
+
+//------------------------------------------------------------------------------------------------------------------------------
+struct MapStep
+{
+	eMapStepType	m_type = ELIMINATE;
+	
+	//Num tiles to perform action on
+	int				m_num;
+	//Color to perform action on
+	Rgba			m_startColor;
+	Rgba			m_destColor;
+};
+
 //------------------------------------------------------------------------------------------------------------------------------
 // All info required to generate map
 // For now we will set them to good defaults so if parsing is a problem we can use the values we already have
@@ -41,6 +58,8 @@ struct MapInfo
 
 	//How long is this map to last?
 	float					m_duration = 10.f;
+
+	std::vector<MapStep>	m_mapStep;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------
@@ -56,6 +75,7 @@ public:
 	Image*					GetImage();	//I want the pointer so I can edit it from Game if I want to
 
 	bool					Update(float deltaTime);
+	bool					IsActive() { return m_mapActive; }
 
 	//Helpers
 	int						GetIndexFromCoordinates(int x, int y);
@@ -77,6 +97,8 @@ private:
 	void					SetupMapRim();
 	void					SetupStartArea();
 	void					SetPathableTiles();
+	void					PerformMapSteps();
+	void					RunStepForType(const MapStep& step);
 
 	void					SetMapDuration();
 	void					SpawnLifeSource();
