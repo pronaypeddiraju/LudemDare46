@@ -113,7 +113,7 @@ private:
 	float								m_fpsLowest = 10.f;
 	float								m_fpsHighest = 0.f;
 
-	AABB2								m_currentCamBounds;
+	AABB2								m_currentCamBounds = AABB2(Vec2(0.f, 0.f), Vec2(16.f, 8.f));
 
 	int									m_maxFragments = 0;
 	int									m_collectedFragements = 0;
