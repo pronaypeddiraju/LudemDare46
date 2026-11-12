@@ -20,7 +20,7 @@ HWND g_hWnd = nullptr;
 HDC g_displayDeviceContext = nullptr;			
 HGLRC g_openGLRenderingContext = nullptr;		
 WindowContext* g_windowContext = nullptr;
-const char* APP_NAME = "24 Hours in Manali";	
+const char* APP_NAME = "LD 46";	
 const float CLIENT_ASPECT = 2.0f;
 
 //The WndProc function for imGUI third party tool
